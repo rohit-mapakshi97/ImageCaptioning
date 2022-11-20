@@ -1,3 +1,5 @@
+from pickle import load
+
 def loadPhotoID(filename):
     file = open(filename, 'r')
     doc = file.read()
@@ -30,6 +32,12 @@ def loadCleanDescriptions(filename, dataset):
     # return dict of ids to lists of text descriptions
     return descriptions
 
+# load entire set of photo descriptions
+def loadPhotoFeatures(filename, dataset):
+    allFeatures = load(open(filename, 'rb'))
+    features = {k: allFeatures[k] for k in dataset}
+    return features
+
 # load training dataset (~8K)
 filename = 'res/trainImages.txt'
 train = loadPhotoID(filename)
@@ -38,3 +46,7 @@ print('Dataset: %d' % len(train))
 # descriptions
 trainDescriptions = loadCleanDescriptions('descriptions.txt', train)
 print('Descriptions: train=%d' % len(trainDescriptions))
+
+# photo features
+trainFeatures = loadPhotoFeatures('features.pkl', train)
+print('Photos: train=%d' % len(trainFeatures))
