@@ -31,3 +31,6 @@ if __name__ == "__main__":
         for path, subdirs, files in os.walk('res/train'):
             for filename in files:
                 a.write(str(filename) + os.linesep)
+
+# this is not right - currently saving 8k for training and 2k for testing
+# But should be 6k for training & 2k for testing
