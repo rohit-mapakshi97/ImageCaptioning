@@ -1,4 +1,3 @@
-import pandas as pd
 from numpy import array
 from pickle import load
 from keras.models import Model
@@ -6,7 +5,6 @@ from keras.callbacks import ModelCheckpoint
 from keras.preprocessing.text import Tokenizer
 from keras.layers import Input, Dense, LSTM, Embedding, Dropout, add
 from keras.utils import pad_sequences, to_categorical, plot_model
-from sklearn.model_selection import train_test_split
 
 def loadPhotoID(filename):
     file = open(filename, 'r')
@@ -106,18 +104,10 @@ def maxLength(descriptions):
     return max(len(d.split()) for d in lines)
 
 if __name__ == "__main__":
-    df = pd.read_fwf('descriptions.txt', sep=" ", header=None, names=["image", "caption"])
-
-    X = df['image']
-    y = df['caption']
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
     # Step 1 Load Data
     # Load training dataset (~6K)
-    # filename = 'res/trainImages.txt'
-    # train = loadPhotoID(filename)
-    train = loadPhotoID(X_train)
+    filename = 'res/trainImages.txt'
+    train = loadPhotoID(filename)
     print('Dataset: %d' % len(train))
 
     trainDescriptions = loadCleanDescriptions('descriptions.txt', train)

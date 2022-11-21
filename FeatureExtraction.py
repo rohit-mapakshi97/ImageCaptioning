@@ -5,7 +5,6 @@ from keras.models import Model
 from keras.applications.vgg19 import VGG19
 from keras.applications.vgg19 import preprocess_input
 from keras.utils import load_img, img_to_array
-from sklearn.model_selection import train_test_split
 
 # Extract features from all photos in dir
 def extractFeatures(model, remove_n_layers, directory):
@@ -83,7 +82,7 @@ def saveDescriptions(descriptions, filename):
     # Build a list of all description strings
     for key, descriptionList in descriptions.items():
         for d in descriptionList:
-            lines.append(key + '\t' + d)
+            lines.append(key + ' ' + d)
 
     data = '\n'.join(lines)
     file = open(filename, 'w')
@@ -98,13 +97,6 @@ def split():
 
 # Extract features from all images
 if __name__ == "__main__":
-    df = pd.read_fwf('descriptions.txt', sep=" ", header=None, names=["image", "caption"])
-
-    X = df['image']
-    y = df['caption']
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-
     #Step 1: Extract Image Features
     image_dir = 'res/Images'
     model, remove_n_layers, name  = None, None, None   
