@@ -1,5 +1,6 @@
 import os 
 import sys
+import pandas as pd
 from numpy import array
 from pickle import dump, load
 from keras.models import Model
@@ -137,7 +138,6 @@ def toLines(descriptions):
     for key in descriptions.keys():
         [all.append(d) for d in descriptions[key]]
     return all
-
 
 def createTokenizer(descriptions):
     lines = toLines(descriptions)
