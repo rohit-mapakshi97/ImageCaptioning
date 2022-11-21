@@ -1,28 +1,30 @@
-import os 
-import sys 
-from pickle import dump
+import os
+import sys
+import pickle
 from keras.applications.vgg19 import VGG19
 from keras.utils import load_img
 from keras.utils import img_to_array
 from keras.applications.vgg19 import preprocess_input
 from keras.models import Model
+import pandas as pd
+import re
 
-
-# Extract features from all photos in dir
-def extractFeatures(model, remove_n_layers, directory):
+def extractFeatures(model, remove_n_layers: int, directory: str) -> dict:
     # Restructure model
-    model = Model(inputs=model.inputs, outputs=model.layers[-remove_n_layers].output)
+    model = Model(inputs=model.inputs,
+                  outputs=model.layers[-remove_n_layers].output)
     # Summarize
     print(model.summary())
     # Extract features from each photo
-    features = dict()
+    features = {}
     for name in os.listdir(directory):
         filename = directory + '/' + name
         image = load_img(filename, target_size=(224, 224))
         # Convert image pixels to a numpy array
         image = img_to_array(image)
         # Reshape data for model
-        image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
+        image = image.reshape(
+            (1, image.shape[0], image.shape[1], image.shape[2]))
         # Preprocess image for model
         image = preprocess_input(image)
         feature = model.predict(image, verbose=0)
@@ -32,24 +34,50 @@ def extractFeatures(model, remove_n_layers, directory):
         print('>%s' % name)
     return features
 
-# Extract features from all images
-if __name__ == "__main__": 
-    #Step 1: Extract Image Features
-    image_dir = 'res/Images'
-    model, remove_n_layers, name  = None, None, None   
-    if sys.argv[1] == None:
+def preprocessText(line: str):
+    # 1 Lowercase & Remove special charecters
+    REGEX_SPECIAL_CHARS = '[^A-Za-z0-9]+'
+    line = re.sub(REGEX_SPECIAL_CHARS, ' ', line.lower()).strip()
+    # Remove words with numbers
+    tokens = line.split()
+    tokens = [w for w in tokens if w.isalpha()]
+    # Remove single-word letters
+    tokens = [word for word in tokens if len(word) > 1]
+    line = " ".join(tokens)
+    #  Change multiple spaces to one space
+    REGEX_SPACE = '\s+'
+    line = re.sub(REGEX_SPACE, ' ', line)
+    return line
+
+def removeExtension(line: str):
+    REGEX = '.jpg#[0-9]'
+    line = re.sub(REGEX, '', line)
+    return line
+
+if __name__ == "__main__":
+    # Step 1: Extract Image Features
+    image_dir = "res/Images"
+    model, remove_n_layers, name = None, None, None
+    if len(sys.argv) == 1:
         model, remove_n_layers, name = VGG19(), 2, "VGG19"
     elif sys.argv[1] == "VGG19":
         model, remove_n_layers, name = VGG19(), 2, "VGG19"
     elif sys.argv[1] == "RESNet50":
         # model, remove_n_layers = **, some_no, "RESNet50"
-        pass 
-    
-    features = extractFeatures(VGG19(), 2, image_dir)
-    print('Extracted Features: %d' % len(features))
-    file_path = "features/image_features" + name + 'pkl'
-    dump(features, open(file_path, 'wb'))
+        pass
+    file_path = "features/image_features_" + name + ".pkl"
+    if not (os.path.isfile(file_path)):
+        features = extractFeatures(VGG19(), 2, image_dir)
+        print("Extracted Features: {}".format(len(features)))
+        pickle.dump(features, open(file_path, "wb"))
 
-    #Step 2: Extract Text Features 
-    #Step 2.1 Preprocess Text 
-    #Step 2.2 Extract Text Features   
+    # Step 2: Preprocess Captions
+    captions_file = "res/Captions/Flickr8k.token.txt"
+    descriptions_file = "features/image_descriptions.txt"
+    if not (os.path.isfile(descriptions_file)):
+        df = pd.read_csv(captions_file, sep="\t", header=None)
+        # print(df.head())
+        df[0] = df.apply(lambda x: removeExtension(x[0]), axis=1)
+        df[1] = df.apply(lambda x: preprocessText(x[1]), axis=1)
+        # print(df.head())
+        df.to_csv(descriptions_file, index=False, sep="\t", header=None)

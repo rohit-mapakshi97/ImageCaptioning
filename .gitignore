@@ -1,1 +1,11 @@
 features/image_features_VGG19.pkl
+test.py
+
+CrowdFlowerAnnotations.txt  
+Flickr8k.lemma.token.txt
+# Flickr_8k.devImages.txt   
+# Flickr_8k.trainImages.txt
+ExpertAnnotations.txt       
+# Flickr8k.token.txt        
+# Flickr_8k.testImages.txt  
+readme.txt
