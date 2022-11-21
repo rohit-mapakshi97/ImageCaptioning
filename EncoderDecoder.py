@@ -18,11 +18,11 @@ def loadPhotoID(filename):
         dataset.append(identifier)
     return set(dataset)
 
-def loadCleanDescriptions(filename, dataset):
+def loadCleanCaptions(filename, dataset):
     file = open(filename, 'r')
     doc = file.read()
     file.close()
-    descriptions = dict()
+    captions = dict()
 
     for line in doc.split('\n'):
         # Split line by white space
@@ -30,37 +30,37 @@ def loadCleanDescriptions(filename, dataset):
         imageId, imageDesc = tokens[0], tokens[1:]
         if imageId in dataset:
             # Create list
-            if imageId not in descriptions:
-                descriptions[imageId] = list()
+            if imageId not in captions:
+                captions[imageId] = list()
             # Add tags at start & end of description to id start/end of desc
             desc = 'startseq ' + ' '.join(imageDesc) + ' endseq'
-            descriptions[imageId].append(desc)
-    # Return dict of ids to lists of text descriptions
-    return descriptions
+            captions[imageId].append(desc)
+    # Return dict of ids to lists of text captions
+    return captions
 
 def loadPhotoFeatures(filename, dataset):
     allFeatures = load(open(filename, 'rb'))
     features = {k: allFeatures[k] for k in dataset}
     return features
 
-def toLines(descriptions):
+def toLines(captions):
     all = list()
-    for key in descriptions.keys():
-        [all.append(d) for d in descriptions[key]]
+    for key in captions.keys():
+        [all.append(d) for d in captions[key]]
     return all
 
-def createTokenizer(descriptions):
-    lines = toLines(descriptions)
+def createTokenizer(captions):
+    lines = toLines(captions)
     t = Tokenizer()
     t.fit_on_texts(lines)
     return t
 
-def createSequences(tokenizer, maxLength, descriptions, photos, vocabSize):
+def createSequences(tokenizer, maxLength, captions, photos, vocabSize):
     X1 = list()
     X2 = list()
     y = list()
 
-    for key, descList in descriptions.items():
+    for key, descList in captions.items():
         for desc in descList:
             seq = tokenizer.texts_to_sequences([desc])[0]
             # split one sequence into multiple X,y pairs
@@ -99,8 +99,8 @@ def defineModel(vocabSize, maxLength):
     plot_model(model, to_file='model.png', show_shapes=True)
     return model
 
-def maxLength(descriptions):
-    lines = toLines(descriptions)
+def maxLength(captions):
+    lines = toLines(captions)
     return max(len(d.split()) for d in lines)
 
 if __name__ == "__main__":
@@ -110,36 +110,36 @@ if __name__ == "__main__":
     train = loadPhotoID(filename)
     print('Dataset: %d' % len(train))
 
-    trainDescriptions = loadCleanDescriptions('descriptions.txt', train)
-    print('Descriptions: train=%d' % len(trainDescriptions))
+    traincaptions = loadCleanCaptions('captions.txt', train)
+    print('captions: train=%d' % len(traincaptions))
 
     trainFeatures = loadPhotoFeatures('features.pkl', train)
     print('Photos: train=%d' % len(trainFeatures))
 
     # Step 2 Prepare Tokenizer
-    tokenizer = createTokenizer(trainDescriptions)
+    tokenizer = createTokenizer(traincaptions)
     vocabSize = len(tokenizer.word_index) + 1
     print('Vocabulary Size: %d' % vocabSize)
 
     # Step 3 Encode Text
     # determine the maximum sequence length
-    maxlength = maxLength(trainDescriptions)
+    maxlength = maxLength(traincaptions)
     print('Description Length: %d' % maxlength)
     # prepare sequences
-    X1train, X2train, ytrain = createSequences(tokenizer, maxlength, trainDescriptions, trainFeatures, vocabSize)
+    X1train, X2train, ytrain = createSequences(tokenizer, maxlength, traincaptions, trainFeatures, vocabSize)
 
     # load test set
     filename = 'res/testImages.txt'
     test = loadPhotoID(filename)
     print('Dataset: %d' % len(test))
-    # descriptions
-    testDescriptions = loadCleanDescriptions('descriptions.txt', test)
-    print('Descriptions: test=%d' % len(testDescriptions))
+    # captions
+    testcaptions = loadCleanCaptions('captions.txt', test)
+    print('captions: test=%d' % len(testcaptions))
     # photo features
     testFeatures = loadPhotoFeatures('features.pkl', test)
     print('Photos: test=%d' % len(testFeatures))
     # prepare sequences
-    X1test, X2test, ytest = createSequences(tokenizer, maxLength, testDescriptions, testFeatures, vocabSize)
+    X1test, X2test, ytest = createSequences(tokenizer, maxLength, testcaptions, testFeatures, vocabSize)
 
     # define the model
     model = defineModel(vocabSize, maxLength)

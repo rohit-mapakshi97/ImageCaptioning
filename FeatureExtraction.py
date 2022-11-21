@@ -30,12 +30,12 @@ def extractFeatures(model, remove_n_layers, directory):
         print('>%s' % name)
     return features
 
-def readDescriptions(filename):
+def readCaptions(filename):
     text = open(filename, 'r')
     file = text.read()
     text.close()
 
-    descriptions = {}
+    captions = {}
     # Process lines
     for line in file.split('\n'):
         # Split line by white space
@@ -49,11 +49,11 @@ def readDescriptions(filename):
         # Convert description tokens back to string
         imageDesc = ' '.join(imageDesc)
         # Create the list
-        if imageId not in descriptions:
-            descriptions[imageId] = list()
+        if imageId not in captions:
+            captions[imageId] = list()
         # Store description
-        descriptions[imageId].append(imageDesc)
-    return descriptions
+        captions[imageId].append(imageDesc)
+    return captions
 
 def cleanText(captions):
     for image, caption in captions.items():
@@ -71,16 +71,16 @@ def cleanText(captions):
             captions[image][i] = imageCaption
     return captions
 
-def createVocabulary(descriptions):
+def createVocabulary(captions):
     vocab = set()
-    for key in descriptions.keys():
-        [vocab.update(d.split()) for d in descriptions[key]]
+    for key in captions.keys():
+        [vocab.update(d.split()) for d in captions[key]]
     return vocab
 
-def saveDescriptions(descriptions, filename):
+def savecaptions(captions, filename):
     lines = list()
     # Build a list of all description strings
-    for key, descriptionList in descriptions.items():
+    for key, descriptionList in captions.items():
         for d in descriptionList:
             lines.append(key + ' ' + d)
 
@@ -117,16 +117,16 @@ if __name__ == "__main__":
     dataset = "res/captions.txt"
     filename = dataset
 
-    print("Mapping descriptions dictionary img to 5 captions")
-    descriptions = readDescriptions(filename)
-    print("Length of descriptions =", len(descriptions))
+    print("Mapping captions dictionary img to 5 captions")
+    captions = readCaptions(filename)
+    print("Length of captions =", len(captions))
 
-    print("Cleaning descriptions")
-    cleanDescriptions = cleanText(descriptions)
+    print("Cleaning captions")
+    cleancaptions = cleanText(captions)
 
     print("Building vocabulary")
-    vocabulary = createVocabulary(cleanDescriptions)
+    vocabulary = createVocabulary(cleancaptions)
 
     print("Length of vocabulary = ", len(vocabulary))
-    print("Saving each description to file descriptions.txt")
-    saveDescriptions(cleanDescriptions, "descriptions.txt")
+    print("Saving each description to file captions.txt")
+    savecaptions(cleancaptions, "captions.txt")
