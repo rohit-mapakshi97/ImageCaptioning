@@ -54,9 +54,7 @@ def removeExtension(line: str):
     line = re.sub(REGEX, '', line)
     return line
 
-if __name__ == "__main__":
-    # Step 1: Extract Image Features
-    image_dir = "res/Images"
+def getModelConfiguration(): 
     model, remove_n_layers, name = None, None, None
     if len(sys.argv) == 1:
         model, remove_n_layers, name = VGG19(), 2, "VGG19"
@@ -65,6 +63,13 @@ if __name__ == "__main__":
     elif sys.argv[1] == "RESNet50":
         # model, remove_n_layers = **, some_no, "RESNet50"
         pass
+    return model, remove_n_layers, name
+
+if __name__ == "__main__":
+    # Step 1: Extract Image Features
+    
+    model, remove_n_layers, name = getModelConfiguration()
+    image_dir = "res/Images"
     file_path = "features/image_features_" + name + ".pkl"
     if not (os.path.isfile(file_path)):
         features = extractFeatures(VGG19(), 2, image_dir)
