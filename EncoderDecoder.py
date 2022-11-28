@@ -96,7 +96,11 @@ def create_sequences(tokenizer, max_length, descriptions, photos, vocab_size):
 
 def defineModel(vocab_size, max_length):
     # feature extractor model
-    inputs1 = Input(shape=(4096,))
+    name = getImageFeaturesFileName()
+    if name = "ResNet50":
+        inputs1 = Input(shape=(2048,))
+    else:
+        inputs1 = Input(shape=(4096,))
     fe1 = Dropout(0.5)(inputs1)
     fe2 = Dense(256, activation='relu')(fe1)
     # sequence model
@@ -176,55 +180,56 @@ def trainModel(train_images_file, validate_images_file, image_features_file, mod
         checkpoint], validation_data=([X1test, X2test], ytest))
     return model, tokenizer, max_length
 
+
 # map an integer to a word
 def wordForId(integer, tokenizer):
-	for word, index in tokenizer.word_index.items():
-		if index == integer:
-			return word
-	return None
+    for word, index in tokenizer.word_index.items():
+        if index == integer:
+            return word
+    return None
 
 # Generate a description for an image
 def generateDescription(model, tokenizer, photo, max_length):
-	# seed the generation process
-	in_text = START_SEQ
-	# iterate over the whole length of the sequence
-	for i in range(max_length):
-		# integer encode input sequence
-		sequence = tokenizer.texts_to_sequences([in_text])[0]
-		# pad input
-		sequence = pad_sequences([sequence], maxlen=max_length)
-		# predict next word
-		yhat = model.predict([photo,sequence], verbose=0)
-		# convert probability to integer
-		yhat = argmax(yhat)
-		# map integer to word
-		word = wordForId(yhat, tokenizer)
-		# stop if we cannot map the word
-		if word is None:
-			break
-		# append as input for generating the next word
-		in_text += ' ' + word
-		# stop if we predict the end of the sequence
-		if word == END_SEQ:
-			break
-	return in_text
+    # seed the generation process
+    in_text = START_SEQ
+    # iterate over the whole length of the sequence
+    for i in range(max_length):
+        # integer encode input sequence
+        sequence = tokenizer.texts_to_sequences([in_text])[0]
+        # pad input
+        sequence = pad_sequences([sequence], maxlen=max_length)
+        # predict next word
+        yhat = model.predict([photo,sequence], verbose=0)
+        # convert probability to integer
+        yhat = argmax(yhat)
+        # map integer to word
+        word = wordForId(yhat, tokenizer)
+        # stop if we cannot map the word
+        if word is None:
+            break
+        # append as input for generating the next word
+        in_text += ' ' + word
+        # stop if we predict the end of the sequence
+        if word == END_SEQ:
+            break
+    return in_text
 
 # evaluate the skill of the model
 def evaluate(model, descriptions, photos, tokenizer, max_length):
-	actual, predicted = list(), list()
-	# step over the whole set
-	for key, desc_list in descriptions.items():
-		# generate description
-		yhat = generateDescription(model, tokenizer, photos[key], max_length)
-		# store actual and predicted
-		references = [d.split() for d in desc_list]
-		actual.append(references)
-		predicted.append(yhat.split())
-	# calculate BLEU score
-	print('BLEU-1: %f' % corpus_bleu(actual, predicted, weights=(1.0, 0, 0, 0)))
-	print('BLEU-2: %f' % corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0)))
-	print('BLEU-3: %f' % corpus_bleu(actual, predicted, weights=(0.3, 0.3, 0.3, 0)))
-	print('BLEU-4: %f' % corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25)))
+    actual, predicted = list(), list()
+    # step over the whole set
+    for key, desc_list in descriptions.items():
+        # generate description
+        yhat = generateDescription(model, tokenizer, photos[key], max_length)
+        # store actual and predicted
+        references = [d.split() for d in desc_list]
+        actual.append(references)
+        predicted.append(yhat.split())
+    # calculate BLEU score
+    print('BLEU-1: %f' % corpus_bleu(actual, predicted, weights=(1.0, 0, 0, 0)))
+    print('BLEU-2: %f' % corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0)))
+    print('BLEU-3: %f' % corpus_bleu(actual, predicted, weights=(0.3, 0.3, 0.3, 0)))
+    print('BLEU-4: %f' % corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25)))
 
 def testModel(test_images_file, image_features_file, model, tokenizer, max_length):
     # Loading

@@ -1,9 +1,12 @@
+import sys
 from keras.models import load_model
 from pickle import load
 from keras.applications.vgg19 import VGG19
+from tensorflow.keras.applications.resnet50 import ResNet50
 from keras.utils import load_img
 from keras.utils import img_to_array
 from keras.applications.vgg19 import preprocess_input
+from keras.applications.resnet import preprocess_input
 from keras.models import Model
 from keras.utils import pad_sequences
 from numpy import array, argmax
@@ -12,8 +15,19 @@ from IPython.display import Image,display
 START_SEQ = "startseq"
 END_SEQ = "endseq"
 
+def getModelConfiguration():
+    model = None
+    if len(sys.argv) == 1:
+        model = VGG19()
+    elif sys.argv[1] == "VGG19":
+        model = VGG19()
+    elif sys.argv[1] == "ResNet50":
+        model = ResNet50()
+    return model
+
 def sampleFeatureExtraction(filename):
-    model = VGG19()
+    name = getModelConfiguration()
+    model = name
     model.layers.pop()
     model = Model(inputs=model.inputs, outputs=model.layers[-2].output)
     image = load_img(filename, target_size=(224, 224))
@@ -65,7 +79,7 @@ def getSampleImageCaption(filename, model):
     return desc.title()
 
 if __name__ == "__main__":
-    model = load_model('models/-model-ep003-loss3.635-val_loss3.880.h5')
-    filename = 'IMG_5125.jpg'
+    model = load_model('models/model_sample.h5')
+    filename = 'image_sample'
     print(getSampleImageCaption(filename, model))
     display(Image(filename))
