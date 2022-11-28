@@ -9,10 +9,10 @@ from keras.models import Model
 from keras.layers import Input, Dense, LSTM, Embedding, Dropout, add
 from keras.callbacks import ModelCheckpoint
 from nltk.translate.bleu_score import corpus_bleu
+import matplotlib.pyplot as plt
 
 START_SEQ = "startseq"
 END_SEQ = "endseq"
-
 
 def getPhotoSet(filename):
     photos_list = []
@@ -97,7 +97,7 @@ def create_sequences(tokenizer, max_length, descriptions, photos, vocab_size):
 def defineModel(vocab_size, max_length):
     # feature extractor model
     name = getImageFeaturesFileName()
-    if name = "ResNet50":
+    if name == "ResNet50":
         inputs1 = Input(shape=(2048,))
     else:
         inputs1 = Input(shape=(4096,))
@@ -176,8 +176,9 @@ def trainModel(train_images_file, validate_images_file, image_features_file, mod
     checkpoint = ModelCheckpoint(
         model_filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     # fit model
-    model.fit([X1train, X2train], ytrain, epochs=20, verbose=2, callbacks=[
+    hist = model.fit([X1train, X2train], ytrain, epochs=2, verbose=2, callbacks=[
         checkpoint], validation_data=([X1test, X2test], ytest))
+    ploting(hist)
     return model, tokenizer, max_length
 
 
@@ -242,8 +243,24 @@ def testModel(test_images_file, image_features_file, model, tokenizer, max_lengt
     print('Photos: test=%d' % len(test_photo_features))
     evaluate(model, test_descriptions, test_photo_features, tokenizer, max_length)
 
-if __name__ == "__main__":
+def ploting(hist):
+    plt.plot(hist.history["acc"])
+    plt.plot(hist.history['val_acc'])
+    plt.title("model accuracy")
+    plt.ylabel("Accuracy")
+    plt.xlabel("Epoch")
+    plt.legend(["Accuracy", "Validation Accuracy"])
+    plt.show()
 
+    plt.plot(hist.history['loss'])
+    plt.plot(hist.history['val_loss'])
+    plt.title("model loss")
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
+    plt.legend(["loss", "Validation Loss"])
+    plt.show()
+
+if __name__ == "__main__":
     # Training
     name = getImageFeaturesFileName()
     image_features_file = "features/image_features_" + name + ".pkl"
@@ -251,5 +268,6 @@ if __name__ == "__main__":
         '-model-ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'
     model, tokenizer, max_length = trainModel(train_images_file='res/Captions/Flickr_8k.trainImages.txt',
                        validate_images_file='res/Captions/Flickr_8k.devImages.txt', image_features_file=image_features_file, model_filepath=model_filepath)
+
     # Testing
     testModel('res/Captions/Flickr_8k.testImages.txt', image_features_file, tokenizer, max_length)
