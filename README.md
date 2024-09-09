@@ -1,1 +1,2 @@
-# ImageCaptioning
+# Image Captioning using Encoder-Decoder Framework 
+This project addresses the challenge of converting visual information into descriptive language by integrating Computer Vision and Natural Language Processing. I developed a multimodal image captioning system using an Encoder-Decoder framework, with CNNs (VGG19 and ResNet50) for extracting image features and LSTMs for generating captions. The system achieved a BLEU score of 0.52, demonstrating its effectiveness in producing accurate and descriptive captions for images.
